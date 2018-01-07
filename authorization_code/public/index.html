@@ -25,6 +25,18 @@
       <div id="loggedin">
         <div id="user-profile">
         </div>
+
+        <h2>Timed Playlist Maker</h2>
+        <div id="timed-playlist-parameters">
+          <form method="post" action="/timed_playlist">
+            <input id="playlist-duration" name="input-duration" type="number" >
+            <input type="submit">
+          </form>
+        </div>
+     
+        <div id="user-savedSongs">
+        </div>
+
         <div id="oauth">
         </div>
         <button class="btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
@@ -48,6 +60,14 @@
             <dt>Country</dt><dd>{{country}}</dd>
           </dl>
         </div>
+      </div>
+    </script>
+
+     <script id="user-savedSongs-template" type="text/x-handlebars-template">
+      <div id="timed-playlist">
+        <h2>Saved Songs</h2>
+        <a href="{{href}}">{{{href}}}</a>
+        {{#list items}}{{track.artists.0.name}} - {{track.name}}{{/list}}
       </div>
     </script>
 
@@ -78,9 +98,37 @@
           return hashParams;
         }
 
+        function getTimedPlaylist() {
+            $.ajax({
+                url: 'https://api.spotify.com/v1/me/tracks',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token
+                },
+                success: function(response) {
+                  savedSongsPlaceholder.innerHTML = savedSongsTemplate(response);
+
+                  $('#timed-playlist').show();
+                }
+            });
+        }
+
+        Handlebars.registerHelper('list', function(items, options) {
+          var out = "<ul>";
+
+          for(var i=0, l=items.length; i<l; i++) {
+            out = out + "<li>" + options.fn(items[i]) + "</li>";
+          }
+
+          return out + "</ul>";
+        });
+        
         var userProfileSource = document.getElementById('user-profile-template').innerHTML,
             userProfileTemplate = Handlebars.compile(userProfileSource),
             userProfilePlaceholder = document.getElementById('user-profile');
+            
+        var savedSongsSource = document.getElementById('user-savedSongs-template').innerHTML,
+            savedSongsTemplate = Handlebars.compile(savedSongsSource),
+            savedSongsPlaceholder = document.getElementById('user-savedSongs');
 
         var oauthSource = document.getElementById('oauth-template').innerHTML,
             oauthTemplate = Handlebars.compile(oauthSource),
@@ -112,8 +160,10 @@
 
                   $('#login').hide();
                   $('#loggedin').show();
+                  $('#timed-playlist').hide();
                 }
             });
+
           } else {
               // render initial screen
               $('#login').show();

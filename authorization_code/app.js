@@ -11,6 +11,8 @@ var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var handlebars = require('handlebars');
 var secrets = require('../secrets.js');
 
 var client_id = secrets.client_id; // Your client id
@@ -39,13 +41,17 @@ var app = express();
 app.use(express.static(__dirname + '/public'))
    .use(cookieParser());
 
+// bodyParser initialization
+var jsonParser = bodyParser.json()
+var urlencodedparser = bodyParser.urlencoded({extended: false})
+
 app.get('/login', function(req, res) {
 
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email';
+  var scope = 'user-read-private user-read-email user-library-read';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -141,6 +147,14 @@ app.get('/refresh_token', function(req, res) {
     }
   });
 });
+
+app.post('/timed_playlist', urlencodedparser, function(req, res) {
+  console.log(req.body);
+  res.send(200);
+  // create timed playlist from given parameters
+  var duration = req.body.input-duration;
+  // etc
+})
 
 console.log('Listening on 8888');
 app.listen(8888);
