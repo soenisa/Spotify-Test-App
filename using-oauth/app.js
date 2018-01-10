@@ -44,14 +44,12 @@ const authorizationUri = oauth2.authorizationCode.authorizeURL({
 
 // Initial page redirecting to Github
 app.get('/auth', (req, res) => {
-  console.log(authorizationUri);
   res.redirect(authorizationUri);
 });
 
 // Callback service parsing the authorization token and asking for the access token
 app.get('/callback', (req, res) => {
   const code = req.query.code;
-  console.log(code);
   const options = {
     code: req.query.code || null,
     redirect_uri: secrets.redirect_uri,
@@ -64,7 +62,6 @@ app.get('/callback', (req, res) => {
       return res.json('Authentication failed');
     }
 
-    console.log('The resulting token: ', result);
     token = oauth2.accessToken.create(result);
 
     res.render('loggedin')
@@ -72,7 +69,6 @@ app.get('/callback', (req, res) => {
 })
 
 app.post('/timed_playlist', urlencodedparser, function (req, res) {
-  console.log(req.body);
   var durationMSec = req.body.input_duration * 60 * 1000; // Convert min to ms
 
   var options = {
@@ -87,10 +83,9 @@ app.post('/timed_playlist', urlencodedparser, function (req, res) {
       timedPlaylist.sortTracksByDuration(body.items), durationMSec);
 
       if(viableTracks.length != 0) {
-        console.log('Number of viable tracks: ' + viableTracks.length);
         var playlists = timedPlaylist.buildPlaylist(viableTracks, durationMSec);
-        console.log(playlists.length);
-        console.log(playlists[0]);
+        console.log('Number of playlists: ' + playlists.length);
+        console.log(playlists);
       }
   });
 

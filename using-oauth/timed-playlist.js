@@ -24,30 +24,44 @@ module.exports.pruneViable = function(tracks, durationMSec) {
 }
 
 /**
- * @return a collection of Tracks that fit within durationMSec
+ * viableTracks: collection of tracks with length < targetDuration, sorted short->long
+ * targetDuration: target playlist duration in milliseconds
+ *  @return a collection of Tracks that fit within targetDuration
  */
-module.exports.buildPlaylist = function(viableTracks, durationMSec) {
+module.exports.buildPlaylist = function(viableTracks, targetDuration) {
     var playlists = [];
 
-    var playlist = {
-        duration: 0,
-        tracks: []
-    }    
-
-    function playlistBuilder(viableTracks, durationMSec, playlist) {
-        if(viableTracks.length == 0)
-            playlists.push(playlist);
-        
+    function playlistBuilder(viableTracks, targetDuration, playlistIdx = -1) {
+        console.log('playlistIdx: ' + playlistIdx);
+        console.log('Number of viable tracks: ' + viableTracks.length);
         for(var i = 0; i < viableTracks.length; i++) {
-            var randTrackIdx = Math.floor(Math.random() * Math.floor(viableTracks.length));
-            var randTrack = viableTracks[randTrackIdx];
-            var newDuration = durationMSec - randTrack.track.duration_ms;
 
-            viableTracks = pruneViable(viableTracks.splice(randTrackIdx, 1), newDuration);
-            playlist.duration+=randTrack.track.duration_ms;
-            playlistBuilder(viableTracks, newDuration, playlist.tracks.push(randTrack));
+            if(playlistIdx = -1) { // if root track, push a new playlist
+                playlistIdx = i;
+                playlists.push({
+                    duration: 0,
+                    tracks: []
+                });
+            }
+
+            var randTrackIdx = Math.floor(Math.random() * Math.floor(viableTracks.length));
+            var randTrack = viableTracks[randTrackIdx].track;
+            playlists[playlistIdx].duration+=randTrack.duration_ms;
+            playlists[playlistIdx].tracks.push(randTrack);
+
+            var newDuration = targetDuration - randTrack.duration_ms;
+
+            var newViableTracks = viableTracks;
+            newViableTracks.splice(randTrackIdx, 1);
+            newViableTracks = module.exports.pruneViable(newViableTracks, newDuration);
+
+            if(newViableTracks.length != 0){
+                playlistBuilder(newViableTracks, newDuration, playlistIdx);
+            }
         }
     }
+
+    playlistBuilder(viableTracks, targetDuration);
 
     return playlists;
 }
