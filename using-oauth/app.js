@@ -84,6 +84,7 @@ app.post('/timed_playlist', urlencodedparser, function (req, res) {
 
       if(viableTracks.length != 0) {
         var playlists = timedPlaylist.buildPlaylist(viableTracks, durationMSec);
+        console.log('Finished building playlist');
         console.log('Number of playlists: ' + playlists.length);
         console.log(playlists);
       }

@@ -24,7 +24,7 @@ module.exports.pruneViable = function(tracks, durationMSec) {
 }
 
 /**
- * viableTracks: collection of tracks with length < targetDuration, sorted short->long
+ * tracks: collection of tracks with length < targetDuration, sorted short->long
  * targetDuration: target playlist duration in milliseconds
  *  @return a collection of Tracks that fit within targetDuration
  */
@@ -32,16 +32,18 @@ module.exports.buildPlaylist = function(viableTracks, targetDuration) {
     var playlists = [];
 
     function playlistBuilder(viableTracks, targetDuration, playlistIdx = -1) {
-        console.log('playlistIdx: ' + playlistIdx);
-        console.log('Number of viable tracks: ' + viableTracks.length);
-        for(var i = 0; i < viableTracks.length; i++) {
+        console.log('Working with playlist index ' + playlistIdx +
+        '\nNumber of viableTracks: ' + viableTracks.length);
 
-            if(playlistIdx = -1) { // if root track, push a new playlist
+        for(var i = 0; i < viableTracks.length; i++) {
+            if(playlistIdx < 0) { // if root track, push a new playlist
                 playlistIdx = i;
                 playlists.push({
                     duration: 0,
                     tracks: []
                 });
+            } else if(playlists[playlistIdx]){
+                
             }
 
             var randTrackIdx = Math.floor(Math.random() * Math.floor(viableTracks.length));
@@ -51,7 +53,7 @@ module.exports.buildPlaylist = function(viableTracks, targetDuration) {
 
             var newDuration = targetDuration - randTrack.duration_ms;
 
-            var newViableTracks = viableTracks;
+            var newViableTracks = viableTracks.slice(); // copy to new array
             newViableTracks.splice(randTrackIdx, 1);
             newViableTracks = module.exports.pruneViable(newViableTracks, newDuration);
 
@@ -60,7 +62,7 @@ module.exports.buildPlaylist = function(viableTracks, targetDuration) {
             }
         }
     }
-
+    debugger;
     playlistBuilder(viableTracks, targetDuration);
 
     return playlists;
