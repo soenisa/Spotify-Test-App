@@ -1,26 +1,29 @@
 
 /**
+ * TODO: unnecessarily complex
+ * Remove this function and replace instances with sort(compareTrackLength)
+ * 
  * tracks : collection of tracks
  * @return Sorts tracks by duration, shortest to longest
  */
-module.exports.sortTracksByDuration = function(tracks) {
-    tracks.sort(compareTrackLength);
-    return tracks;
+module.exports.sortTracksByDuration = function (tracks) {
+  tracks.sort(compareTrackLength);
+  return tracks;
 }
- 
+
 /**
  * tracks : collection of tracks sorted by track duration, shortest to longest
- * @return Removes any songs from tracks whose time is greater than durationSec
+ * @return A copy that removes any songs from tracks whose time is greater than durationSec
  */
-module.exports.pruneViable = function(tracks, durationMSec) {
-    for(var i = 0; i < tracks.length; i++)
-        if(durationMSec - tracks[i].track.duration_ms < -5000)
-            if(i == 0)
-                return [];
-            else   
-                return tracks.slice(0,i);
-    
-    return tracks;
+module.exports.pruneViable = function (tracks, durationMSec) {
+  for (var i = 0; i < tracks.length; i++)
+    if (durationMSec - tracks[i].track.duration_ms < -5000)
+      if (i == 0)
+        return [];
+      else
+        return tracks.slice(0, i);
+
+  return tracks.slice();
 }
 
 /**
@@ -28,54 +31,54 @@ module.exports.pruneViable = function(tracks, durationMSec) {
  * targetDuration: target playlist duration in milliseconds
  *  @return a collection of Tracks that fit within targetDuration
  */
-module.exports.buildPlaylist = function(viableTracks, targetDuration) {
-    var playlists = [];
+module.exports.buildPlaylist = function (viableTracks, targetDuration) {
+  var playlists = [];
 
-    function playlistBuilder(viableTracks, targetDuration, playlistIdx = -1) {
-        console.log('Working with playlist index ' + playlistIdx +
-        '\nNumber of viableTracks: ' + viableTracks.length);
+//  Selects a random track from viableTracks and adds it to the current playlist
+  function selectRandom(allTracks, targetDuration, playlist = {duration: 0, tracks: []}) {
+    
+    var usedIdxs = [];
+    while (usedIdxs.length < allTracks.length) { // while unused tracks exist
+      debugger;
+      
+      // select a random one, no repeats
+      var randTrackIdx = -1;
+      while (randTrackIdx == -1 || usedIdxs.includes(randTrackIdx))
+        randTrackIdx = Math.floor(Math.random() * Math.floor(allTracks.length));
+      // track the used ones
+      usedIdxs.push(randTrackIdx)
 
-        for(var i = 0; i < viableTracks.length; i++) {
-            if(playlistIdx < 0) { // if root track, push a new playlist
-                playlistIdx = i;
-                playlists.push({
-                    duration: 0,
-                    tracks: []
-                });
-            } else if(playlists[playlistIdx]){
-                
-            }
-
-            var randTrackIdx = Math.floor(Math.random() * Math.floor(viableTracks.length));
-            var randTrack = viableTracks[randTrackIdx].track;
-            playlists[playlistIdx].duration+=randTrack.duration_ms;
-            playlists[playlistIdx].tracks.push(randTrack);
-
-            var newDuration = targetDuration - randTrack.duration_ms;
-
-            var newViableTracks = viableTracks.slice(); // copy to new array
-            newViableTracks.splice(randTrackIdx, 1);
-            newViableTracks = module.exports.pruneViable(newViableTracks, newDuration);
-
-            if(newViableTracks.length != 0){
-                playlistBuilder(newViableTracks, newDuration, playlistIdx);
-            }
-        }
+      // copy the playlist as a new object
+      var currPlaylist = Object.assign({}, playlist);
+      // update current playlist
+      currPlaylist.tracks.push(allTracks[randTrackIdx]);
+      currPlaylist.duration += allTracks[randTrackIdx].track.duration_ms;
+      //prune the tracks
+      var viableTracks = module.exports.pruneViable(allTracks, targetDuration - currPlaylist.duration);
+      // remove the viable track if it's still there
+      if (randTrackIdx < viableTracks.length)
+        viableTracks.splice(randTrackIdx, 1);
+      // recurse into a new playlist
+      selectRandom(viableTracks, targetDuration, currPlaylist);
     }
-    debugger;
-    playlistBuilder(viableTracks, targetDuration);
+    // if all tracks have been used, or allTracks is empty then....
+    // add the playlist to the global list?
+    playlists.push(playlist);
+  }
+  selectRandom(viableTracks, targetDuration);
 
-    return playlists;
+  debugger;
+  return playlists;
 }
 
 
 
 function compareTrackLength(a, b) {
-    let comparison = 0;
-    if(a.track.duration_ms < b.track.duration_ms)
-        comparison = -1;
-    else if(b.track.duration_ms < a.track.duration_ms)
-        comparison =  1;
+  let comparison = 0;
+  if (a.track.duration_ms < b.track.duration_ms)
+    comparison = -1;
+  else if (b.track.duration_ms < a.track.duration_ms)
+    comparison = 1;
 
-    return comparison;
+  return comparison;
 }
