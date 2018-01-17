@@ -1,3 +1,4 @@
+var clone = require('clone');
 
 /**
  * TODO: unnecessarily complex
@@ -39,7 +40,6 @@ module.exports.buildPlaylist = function (viableTracks, targetDuration) {
     
     var usedIdxs = [];
     while (usedIdxs.length < allTracks.length) { // while unused tracks exist
-      debugger;
       
       // select a random one, no repeats
       var randTrackIdx = -1;
@@ -49,7 +49,7 @@ module.exports.buildPlaylist = function (viableTracks, targetDuration) {
       usedIdxs.push(randTrackIdx)
 
       // copy the playlist as a new object
-      var currPlaylist = Object.assign({}, playlist);
+      var currPlaylist = clone(playlist);
       // update current playlist
       currPlaylist.tracks.push(allTracks[randTrackIdx]);
       currPlaylist.duration += allTracks[randTrackIdx].track.duration_ms;
