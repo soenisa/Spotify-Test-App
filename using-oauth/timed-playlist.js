@@ -8,8 +8,7 @@ var clone = require('clone');
  * @return Sorts tracks by duration, shortest to longest
  */
 module.exports.sortTracksByDuration = function (tracks) {
-  tracks.sort(compareTrackLength);
-  return tracks;
+  return tracks.sort(orderByTrackLength);
 }
 
 /**
@@ -35,12 +34,12 @@ module.exports.pruneViable = function (tracks, durationMSec) {
 module.exports.buildPlaylist = function (viableTracks, targetDuration) {
   var playlists = [];
 
-//  Selects a random track from viableTracks and adds it to the current playlist
-  function selectRandom(allTracks, targetDuration, playlist = {duration: 0, tracks: []}) {
-    
+  //  Selects a random track from viableTracks and adds it to the current playlist
+  function selectRandom(allTracks, targetDuration, playlist = { duration: 0, tracks: [] }) {
+
     var usedIdxs = [];
     while (usedIdxs.length < allTracks.length) { // while unused tracks exist
-      
+
       // select a random one, no repeats
       var randTrackIdx = -1;
       while (randTrackIdx == -1 || usedIdxs.includes(randTrackIdx))
@@ -51,7 +50,7 @@ module.exports.buildPlaylist = function (viableTracks, targetDuration) {
       // copy the playlist as a new object
       var currPlaylist = clone(playlist);
       // update current playlist
-      currPlaylist.tracks.push(allTracks[randTrackIdx]);
+      currPlaylist.tracks.push(allTracks[randTrackIdx].track);
       currPlaylist.duration += allTracks[randTrackIdx].track.duration_ms;
       //prune the tracks
       var viableTracks = module.exports.pruneViable(allTracks, targetDuration - currPlaylist.duration);
@@ -67,13 +66,24 @@ module.exports.buildPlaylist = function (viableTracks, targetDuration) {
   }
   selectRandom(viableTracks, targetDuration);
 
-  debugger;
+  // sort playlists by proximity to target duration
+  playlists.sort(function (a, b) {
+    let comparison = 0;
+    let aDur = Math.abs(a.duration - targetDuration);
+    let bDur = Math.abs(b.duration - targetDuration);
+    if (aDur < bDur)
+      comparison = -1;
+    else if (aDur > bDur)
+      comparison = 1;
+
+    return comparison;
+  });
+
   return playlists;
 }
 
 
-
-function compareTrackLength(a, b) {
+function orderByTrackLength(a, b) {
   let comparison = 0;
   if (a.track.duration_ms < b.track.duration_ms)
     comparison = -1;

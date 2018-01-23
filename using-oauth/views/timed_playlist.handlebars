@@ -1,3 +1,6 @@
 <h1>Create Timed Playlist</h1>
 <br/>
-{{input-duration}}
+<p>The best playlist we made is <b>{{playlist.duration}}</b>ms long!<br/>
+That's a difference of <b>{{difference}}</b>ms</p>
+<p>It contains the following songs: </p>
+{{#list playlist.tracks}}{{name}} - {{artists.0.name}}{{/list}}
