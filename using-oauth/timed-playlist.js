@@ -50,7 +50,7 @@ module.exports.buildPlaylist = function (viableTracks, targetDuration) {
       // copy the playlist as a new object
       var currPlaylist = clone(playlist);
       // update current playlist
-      currPlaylist.tracks.push(allTracks[randTrackIdx].track);
+      currPlaylist.tracks.push(allTracks[randTrackIdx].track.uri);
       currPlaylist.duration += allTracks[randTrackIdx].track.duration_ms;
       //prune the tracks
       var viableTracks = module.exports.pruneViable(allTracks, targetDuration - currPlaylist.duration);

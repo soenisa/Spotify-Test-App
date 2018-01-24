@@ -119,7 +119,7 @@ app.post('/timed_playlist', urlencodedparser, function (req, res) {
     res.redirect('/auth');
   else {
     var durationMSec = req.body.input_duration * 60 * 1000; // Convert min to ms
-    var inputName = req.body.playlist_name != "" ? req.body.playlist_name : "Timed Playlist";
+    var inputName = req.body.playlist_name != "" ? req.body.playlist_name : "Timed Playlist " + req.body.input_duration + ":00";
     var playlists = [];
     var playlist
     var options = {
@@ -203,6 +203,23 @@ app.post('/timed_playlist', urlencodedparser, function (req, res) {
       });
     };
 
+    var addTracks = (playlistBody, trackUris) => {
+      return new Promise(function (resolve, reject) {
+        //asume URIs are valid
+
+        options.url = "https://api.spotify.com/v1/users/" + playlistBody.owner.id + "/playlists/" + playlistBody.id + "/tracks";
+        options.body = { uris: trackUris };
+        request.post(options, function (error, response, body) {
+          if (!error && response.statusCode === 201) {
+            console.log('Tracks added!');
+            res.json('Tracks added!');
+          } else {
+            reject({ error: error, body: body })
+          }
+        })
+      });
+    }
+
     // generateTracklist().then(function (resolvedPlaylist) {
     //   console.log('the resolved playlist has a duration of ' + resolvedPlaylist.duration);
 
@@ -214,7 +231,10 @@ app.post('/timed_playlist', urlencodedparser, function (req, res) {
 
     Promise.all([createPlaylistFlow(), generateTracklist()]).then(function (values) {
       debugger;
-      console.log('Both promises completed successfully!')
+      console.log('Both promises completed successfully!');
+      // Add songs to playlist
+      return addTracks(values[0], values[1].tracks);
+
     })
 
   }
